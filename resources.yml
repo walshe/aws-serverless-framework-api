@@ -1,0 +1,107 @@
+# notes DynamoDb table
+notesTable:
+     Type: AWS::DynamoDB::Table
+     Properties:
+      TableName: notes-${self:provider.stage}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: notesId
+          AttributeType: S
+        
+      KeySchema:
+        - AttributeName: notesId
+          KeyType: 'HASH'
+
+
+
+# AWS Lambda execution role
+# lambdaExecutionRole:
+#   Type: 'AWS::IAM::Role'
+#   Properties:
+#     AssumeRolePolicyDocument:
+#       Version: '2012-10-17'
+#       Statement:
+#         - Effect: Allow
+#           Principal:
+#             Service:
+#               - lambda.amazonaws.com
+#           Action:
+#             - 'sts:AssumeRole'
+#     Policies:
+#       - PolicyName: lambda-execution-policy
+#         PolicyDocument:
+#           Version: '2012-10-17'
+#           Statement:
+#             - Effect: Allow
+#               Action:
+#                 - 'logs:CreateLogGroup'
+#                 - 'logs:CreateLogStream'
+#                 - 'logs:PutLogEvents'
+#               Resource: 'arn:aws:logs:*:*:*'
+
+# AWS Lambda function to auto-confirm users
+# autoConfirmUserLambda:
+#   Type: 'AWS::Lambda::Function'
+#   Properties:
+#     Handler: cognitoAutoConfirm.handler
+#     Role: !GetAtt lambdaExecutionRole.Arn
+#     Runtime: nodejs14.x
+#     Code:
+#       ZipFile: |
+#         exports.handler = function(event, context, callback) {
+#           event.response.autoConfirmUser = true;
+#           callback(null, event);
+#         };
+
+# Cognito user pool
+cognitoUserPool:
+     Type: AWS::Cognito::UserPool
+     Properties:
+      UserPoolName : MyNotesUP-${self:provider.stage}
+      # LambdaConfig:
+      # PreSignUp: !GetAtt autoConfirmUserLambda.Arn
+
+# Cognito User Pool Web Client
+cognitoUserPoolWebClient:
+  Type: AWS::Cognito::UserPoolClient
+  Properties:
+    UserPoolId: !Ref cognitoUserPool
+    ClientName: web-${self:provider.stage}
+    AllowedOAuthFlowsUserPoolClient : true
+    SupportedIdentityProviders:
+      - COGNITO
+    AllowedOAuthScopes:
+      - phone
+      - email
+      - profile
+      - openid
+    AllowedOAuthFlows:
+      - implicit
+    CallbackURLs:
+      - http://localhost:3000
+
+# Cognito User Pool Domain    
+cognitoUserPoolDomain:
+  Type: AWS::Cognito::UserPoolDomain
+  Properties:
+    UserPoolId: !Ref cognitoUserPool
+    Domain: mynotesdomain-${self:provider.stage}
+
+
+# Alternative way to define a userpool authorizor
+  # myApiGatewayAuthorizer:
+  #     Type: 'AWS::ApiGateway::Authorizer'
+  #     Properties:
+  #       Name: CognitoAuthorizer
+  #       Type: COGNITO_USER_POOLS
+  #       IdentitySource: method.request.header.Authorization
+  #       RestApiId: 
+  #         Ref: 'ApiGatewayRestApi'  # you may need to update this depending on your RestApi resource name
+  #       ProviderARNs: 
+  #         - Fn::GetAtt: [cognitoUserPool, Arn]   
+
+  #its then used like this in a function's event section:
+  # authorizer:
+          #   type: COGNITO_USER_POOLS
+          #   authorizerId: 
+          #     Ref: myApiGatewayAuthorizer 

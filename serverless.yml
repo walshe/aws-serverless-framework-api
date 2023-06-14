@@ -1,0 +1,112 @@
+service: notes-api
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  #lambdaHashingVersion: 20201221
+  stage: ${opt:stage, 'dev'}
+  region: eu-west-1
+  
+
+functions:
+  # basic authorizor use in a handler with - authorizer: authorizor
+  authorizor:
+    handler: authorizor.handler
+    environment:
+      COGNITO_USER_POOL_ID : !Ref cognitoUserPool
+      COGNITO_WEB_CLIENT_ID : !Ref cognitoUserPoolWebClient
+
+  createNote:
+    handler: handler.createNote
+    environment:
+      NOTES_TABLE_NAME : !Ref notesTable
+      AWS_NODEJS_CONNECTION_REUSE_ENABLED : 1
+    iamRoleStatements:
+      - Effect: Allow
+        Action: 
+          - dynamodb:PutItem
+        Resource: !GetAtt notesTable.Arn
+    events:
+      - http:
+          method: post
+          path: notes
+          authorizer:
+            name: userpool_authorizor-${self:provider.stage}
+            type: COGNITO_USER_POOLS
+            arn : !GetAtt cognitoUserPool.Arn
+
+  updateNote:
+    handler: handler.updateNote
+    environment:
+      NOTES_TABLE_NAME : !Ref notesTable
+      AWS_NODEJS_CONNECTION_REUSE_ENABLED : 1
+    iamRoleStatements:
+      - Effect: Allow
+        Action: 
+          - dynamodb:UpdateItem
+        Resource: !GetAtt notesTable.Arn
+    events:
+      - http:
+          method: put
+          path: notes/{id}
+          authorizer:
+            name: userpool_authorizor-${self:provider.stage}
+            type: COGNITO_USER_POOLS
+            arn : !GetAtt cognitoUserPool.Arn
+
+  deleteNote:
+    handler: handler.deleteNote
+    environment:
+      NOTES_TABLE_NAME : !Ref notesTable
+      AWS_NODEJS_CONNECTION_REUSE_ENABLED : 1
+    iamRoleStatements:
+      - Effect: Allow
+        Action: 
+          - dynamodb:DeleteItem
+        Resource: !GetAtt notesTable.Arn
+    events:
+      - http:
+          method: delete
+          path: notes/{id}   
+          authorizer:
+            name: userpool_authorizor-${self:provider.stage}
+            type: COGNITO_USER_POOLS
+            arn : !GetAtt cognitoUserPool.Arn
+  
+  getAllNotes:
+    handler: handler.getAllNotes
+    environment:
+      NOTES_TABLE_NAME : !Ref notesTable
+      AWS_NODEJS_CONNECTION_REUSE_ENABLED : 1
+    iamRoleStatements:
+      - Effect: Allow
+        Action: 
+          - dynamodb:Scan
+        Resource: !GetAtt notesTable.Arn
+    events:
+      - http:
+          method: get
+          path: notes  
+          authorizer:
+            name: userpool_authorizor-${self:provider.stage}
+            type: COGNITO_USER_POOLS
+            arn : !GetAtt cognitoUserPool.Arn
+
+  preSignUp:
+    handler: presignup.autoconfirm
+    events:
+      - cognitoUserPool:
+          pool: MyNotesUP-${self:provider.stage}
+          trigger: PreSignUp
+          existing: true
+          forceDeploy: true
+
+
+plugins:
+  - serverless-iam-roles-per-function
+
+# you can add CloudFormation resource templates here
+resources:
+  Resources: ${file(resources.yml)}
