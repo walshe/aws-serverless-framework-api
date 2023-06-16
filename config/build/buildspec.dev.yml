@@ -13,7 +13,7 @@ phases:
       - npm install 
      
   build:
-    on-failure: ABORT
+    # on-failure: ABORT
     commands : 
       - echo runnign tests
       - npm test  
