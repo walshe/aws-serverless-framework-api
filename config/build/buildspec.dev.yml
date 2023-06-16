@@ -13,18 +13,19 @@ phases:
       - npm install 
      
   build:
-    on-failure : ABORT
+    on-failure: ABORT
     commands : 
       - echo runnign tests
       - npm test  
       - echo packaging the service
       - serverless package --package my-artifact --stage dev
+    finally:
+      - echo in finally    
     
 artifacts:
   files:
     - my-artifact/*
   name : MyProject
-    - index.html
-    - package.json
-    - node_modules/async/*
-    - node_modules/lodash/*
+  cache:
+    paths:
+      - 'node_modules/**/*'
