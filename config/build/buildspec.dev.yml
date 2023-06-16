@@ -1,7 +1,7 @@
 version: 0.2
 
 phases:
-  on-failure : ABORT
+  # on-failure : ABORT
   install:
     runtime-versions:
       nodejs: 18
@@ -13,7 +13,7 @@ phases:
       - npm install 
      
   build:
-    # on-failure: ABORT
+    on-failure: ABORT
     commands : 
       - echo runnign tests
       - npm test  
