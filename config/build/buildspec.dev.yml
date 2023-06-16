@@ -9,7 +9,6 @@ phases:
     commands:
       - echo Installing Serverless CLI...
       - npm install -g serverless@2
-      - cd notes
       - echo 'installing npm dependencies of notes service'
       - npm install 
      
