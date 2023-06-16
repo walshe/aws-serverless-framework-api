@@ -1,7 +1,7 @@
 version: 0.2
 
 phases:
-  # on-failure : ABORT
+  
   install:
     runtime-versions:
       nodejs: 18
@@ -26,6 +26,7 @@ artifacts:
   files:
     - my-artifact/*
   name : MyProject
-  cache:
-    paths:
-      - 'node_modules/**/*'
+
+cache:
+  paths:
+    - 'node_modules/**/*'
