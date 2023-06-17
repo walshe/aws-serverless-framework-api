@@ -10,7 +10,7 @@ jobs:
     name: production deployment
     runs-on: ubuntu-latest
     environment: production
-    url : https://todo.com #optionals
+    #url : https://todo.com
     strategy:
       matrix:
         node-version: [14.x]
