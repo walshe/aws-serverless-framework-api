@@ -4,7 +4,7 @@ frameworkVersion: '3'
 
 provider:
   name: aws
-  runtime: nodejs18.x
+  runtime: nodejs16.x
   #lambdaHashingVersion: 20201221
   stage: ${opt:stage, 'dev'}
   region: eu-west-1
@@ -105,6 +105,7 @@ functions:
 
 
 plugins:
+  - serverless-plugin-typescript
   - serverless-iam-roles-per-function
 
 # you can add CloudFormation resource templates here
